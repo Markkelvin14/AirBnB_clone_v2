@@ -43,15 +43,15 @@ class DBStorage:
                 cls = eval(cls)
             query = self.__session.query(cls)
             for element in query:
-                key = "{}.{}".format(type(element).__name__, elem.id)
-                dicts[key] = elem
+                key = "{}.{}".format(type(element).__name__, element.id)
+                dicts[key] = element
         else:
             lists = [State, City, User, Place, Review, Amenity]
             for cs in lists:
                 query = self.__session.query(cs)
                 for element in query:
-                    key = "{}.{}".format(type(element).__name__, elem.id)
-                    dic[key] = element
+                    key = "{}.{}".format(type(element).__name__, element.id)
+                    dicts[key] = element
         return (dicts)
 
     def new(self, obj):
@@ -74,8 +74,8 @@ class DBStorage:
         """configuration
         """
         Base.metadata.create_all(self.__engine)
-        sect = sessionmaker(bind=self.__engine, expire_on_commit=False)
-        Session = scoped_session(sect)
+        sec = sessionmaker(bind=self.__engine, expire_on_commit=False)
+        Session = scoped_session(sec)
         self.__session = Session()
 
     def close(self):
