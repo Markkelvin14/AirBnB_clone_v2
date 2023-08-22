@@ -8,6 +8,16 @@ from os import getenv
 import models
 
 
+place_amenity = Table("place_amenity", Base.metadata,
+                      Column("place_id", String(60),
+                             ForeignKey("places.id"),
+                             primary_key=True,
+                             nullable=False),
+                      Column("amenity_id", String(60),
+                             ForeignKey("amenities.id"),
+                             primary_key=True,
+                             nullable=False))
+
 class Place(BaseModel, Base):
     """ A place to stay """
     __tablename__ = "places"
@@ -26,3 +36,25 @@ class Place(BaseModel, Base):
     if getenv("HBNB_TYPE_STORAGE") == "db":
         reviews = relationship("Review", cascade='all, delete, delete-orphan',
                                backref="place")
+
+        amenities = relationship("Amenity", secondary=place_amenity,
+                                 viewonly=False)
+
+    else:
+        @property
+        def reviews(self):
+            """ Returns list of reviews.id """
+            review_objs = models.storage.all("Review").values()
+            return list(filter((lambda x: x.place_id == self.id), review_objs))
+
+        @property
+        def amenities(self):
+             """ Returns list of amenities.id """
+             amenity_ins = models.storage.all("Amenity").values()
+             return list(filter((lambda x: x.place_id == self.id), amenity_ins))
+
+         @amenities.setter
+         def amenities(self, obj=None):
+             """ setter for amenities """
+             if type(obj) == models.classes["Amenity"]:
+                 amenity_ids.append(obj.id)
