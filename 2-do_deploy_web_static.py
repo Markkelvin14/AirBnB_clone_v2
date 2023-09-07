@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-"""Fabric script that distributes an archive to your web servers"""
+"""
+Fabric script that distributes an archive to your web servers
+"""
 
 from datetime import datetime
 from fabric.api import *
@@ -10,25 +12,29 @@ env.user = "ubuntu"
 
 
 def do_pack():
-    """return the archive path if archive has generated correctly"""
+    """
+        return the archive path if archive has generated correctly.
+    """
 
     local("mkdir -p versions")
     date = datetime.now().strftime("%Y%m%d%H%M%S")
     archived_name = "versions/web_static_{}.tgz".format(date)
-    t_gzip_archive = local("tar -cvzf {} web_static".format(archived_name))
+    gzip_archive = local("tar -cvzf {} web_static".format(archived_name))
 
-    if t_gzip_archive.succeeded:
+    if gzip_archive.succeeded:
         return archived_name
     else:
         return None
 
 
 def do_deploy(archive_path):
-    """Distribute archive."""
+    """
+        Distribute archive.
+    """
     if os.path.exists(archive_path):
         arch_name = archive_path[9:]
         new_version = "/data/web_static/releases/" + arch_name[:-4]
-        arch_name = "/tmp/" + archived_file
+        arch_name = "/tmp/" + arch_name
         put(archive_path, "/tmp/")
         run("sudo mkdir -p {}".format(new_version))
         run("sudo tar -xzf {} -C {}/".format(arch_name,
