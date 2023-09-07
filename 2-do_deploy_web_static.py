@@ -1,28 +1,46 @@
 #!/usr/bin/python3
-''' contains the function do_deploy '''
-from fabric.api import env, sudo, run, put
-from os.path import exists
-env.hosts = ['34.203.33.205', '54.210.127.27']
-env.user = 'ubuntu'
+"""Fabric script that distributes an archive to your web servers"""
+
+from datetime import datetime
+from fabric.api import *
+import os
+
+env.hosts = ["34.203.33.205", "54.210.127.27"]
+env.user = "ubuntu"
+
+
+def do_pack():
+    """return the archive path if archive has generated correctly"""
+
+    local("mkdir -p versions")
+    date = datetime.now().strftime("%Y%m%d%H%M%S")
+    archived_name = "versions/web_static_{}.tgz".format(date)
+    t_gzip_archive = local("tar -cvzf {} web_static".format(archived_name))
+
+    if t_gzip_archive.succeeded:
+        return archived_name
+    else:
+        return None
 
 
 def do_deploy(archive_path):
-    ''' distributes an archive to web servers '''
-    if exists(archive_path) is False:
-        return False
-    arch_name = archive_path.split('/')[-1]
-    new = '/data/web_static/release/' + \
-          "{}".format(arch_name.split('.')[0])
-    current = 'data/web_static/current'
-    try:
-        put(archive_path, '/tmp/')
-        run('sudo mkdir -p {}/'.format(new))
-        run('sudo tar -xzf {} -C {}/'.format(tmp, new))
-        run('sudo rm /tmp/{}'.format(arch_name))
-        run('sudo mv {}/web_static {}/'.format(new))
-        run('sudo rm -rf {}'.format(current))
-        run('sudo ln -s {}/ {}'.format(new, current))
+    """Distribute archive."""
+    if os.path.exists(archive_path):
+        arch_name = archive_path[9:]
+        new_version = "/data/web_static/releases/" + arch_name[:-4]
+        arch_name = "/tmp/" + archived_file
+        put(archive_path, "/tmp/")
+        run("sudo mkdir -p {}".format(new_version))
+        run("sudo tar -xzf {} -C {}/".format(arch_name,
+                                             new_version))
+        run("sudo rm {}".format(arch_name))
+        run("sudo mv {}/web_static/* {}".format(new_version,
+                                                new_version))
+        run("sudo rm -rf {}/web_static".format(new_version))
+        run("sudo rm -rf /data/web_static/current")
+        run("sudo ln -s {} /data/web_static/current".format(new_version))
+
         print("New version deployed!")
         return True
-    except:
-        return False
+
+    return False
